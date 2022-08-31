@@ -16,9 +16,23 @@ namespace Escola.Domain.Services
         {
             _alunoRepositorio = alunoRepositorio;
         }
-        public void Excluir(AlunoDTO aluno)
+
+        public void Alterar(AlunoDTO aluno, Guid id)
         {
-            throw new NotImplementedException();
+            Aluno alunoExistente = _alunoRepositorio.ObterPorId(id);
+
+            alunoExistente.Nome = aluno.Nome;
+            alunoExistente.Sobrenome = aluno.Sobrenome;
+            alunoExistente.Email = aluno.Email;
+            alunoExistente.DataNascimento = aluno.DataNascimento;
+
+            _alunoRepositorio.Alterar(alunoExistente);
+        }
+
+        public void Excluir(Guid id)
+        {
+            var aluno = _alunoRepositorio.ObterPorId(id);
+            _alunoRepositorio.Excluir(aluno);
         }
 
         public void Inserir(AlunoDTO aluno)
@@ -30,12 +44,23 @@ namespace Escola.Domain.Services
 
         public AlunoDTO ObterPorId(Guid id)
         {
-            throw new NotImplementedException();
+            var aluno = _alunoRepositorio.ObterPorId(id);
+
+            return new AlunoDTO(aluno);
         }
 
         public IList<AlunoDTO> ObterTodos()
-        {
-            throw new NotImplementedException();
+        {   
+            var listaAlunos = _alunoRepositorio.ObterTodos().ToArray();
+
+            List<AlunoDTO> listaAlunosDto = new List<AlunoDTO>();
+
+            for (int i = 0; i < listaAlunos.Length ; i++)
+            {
+                listaAlunosDto.Add(new AlunoDTO(listaAlunos[i]));
+            }
+
+            return listaAlunosDto;
         }
     }
 }
