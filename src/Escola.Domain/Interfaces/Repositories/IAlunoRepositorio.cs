@@ -12,6 +12,7 @@ namespace Escola.Domain.Interfaces.Repositories
         Aluno ObterPorId(Guid id);
         void Inserir(Aluno aluno);
         void Excluir (Aluno aluno);
+        void Alterar (Aluno alunoExistente, Aluno alunoAlteracao);
 
     }
 }
