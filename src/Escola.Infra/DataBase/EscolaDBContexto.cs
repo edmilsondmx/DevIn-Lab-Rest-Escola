@@ -5,15 +5,26 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Escola.Domain.Models;
 using Escola.Infra.DataBase.Mappings;
+using Microsoft.Extensions.Configuration;
 
 namespace Escola.Infra.DataBase
 {
     public class EscolaDBContexto : DbContext
     {
+        private readonly IConfiguration _configuration;
+
+        public EscolaDBContexto(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
         public DbSet<Aluno> Alunos {get; set;}
         
         protected override void OnConfiguring(DbContextOptionsBuilder options){
-            options.UseSqlServer("Password=YourStrong@Passw0rd;Persist Security Info=True;User ID=sa;Initial Catalog=EscolaDB;Data Source=tcp:localhost,1433");
+            base.OnConfiguring(options);
+
+            options.UseSqlServer(
+                _configuration.GetConnectionString("ConexaoBanco")
+            );
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder){
