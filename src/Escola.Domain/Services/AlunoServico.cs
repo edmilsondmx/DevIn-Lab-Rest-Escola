@@ -17,16 +17,18 @@ namespace Escola.Domain.Services
             _alunoRepositorio = alunoRepositorio;
         }
 
-        public void Alterar(AlunoDTO aluno, Guid id)
+        public void Alterar(AlunoDTO aluno)
         {
-            Aluno alunoExistente = _alunoRepositorio.ObterPorId(id);
+            Aluno alunoDb = _alunoRepositorio.ObterPorId(aluno.Id);
 
-            alunoExistente.Nome = aluno.Nome;
-            alunoExistente.Sobrenome = aluno.Sobrenome;
-            alunoExistente.Email = aluno.Email;
-            alunoExistente.DataNascimento = aluno.DataNascimento;
+            alunoDb.Update(aluno);
 
-            _alunoRepositorio.Alterar(alunoExistente);
+            /* alunoDb.Nome = aluno.Nome;
+            alunoDb.Sobrenome = aluno.Sobrenome;
+            alunoDb.Email = aluno.Email;
+            alunoDb.DataNascimento = aluno.DataNascimento; */
+
+            _alunoRepositorio.Alterar(alunoDb);
         }
 
         public void Excluir(Guid id)
@@ -44,14 +46,15 @@ namespace Escola.Domain.Services
 
         public AlunoDTO ObterPorId(Guid id)
         {
-            var aluno = _alunoRepositorio.ObterPorId(id);
-
-            return new AlunoDTO(aluno);
+            return new AlunoDTO(_alunoRepositorio.ObterPorId(id));
         }
 
         public IList<AlunoDTO> ObterTodos()
         {   
-            var listaAlunos = _alunoRepositorio.ObterTodos().ToArray();
+            return _alunoRepositorio.ObterTodos()
+                .Select(x => new AlunoDTO(x)).ToList();
+
+            /* var listaAlunos = _alunoRepositorio.ObterTodos().ToArray();
 
             List<AlunoDTO> listaAlunosDto = new List<AlunoDTO>();
 
@@ -60,7 +63,7 @@ namespace Escola.Domain.Services
                 listaAlunosDto.Add(new AlunoDTO(listaAlunos[i]));
             }
 
-            return listaAlunosDto;
+            return listaAlunosDto; */
         }
     }
 }
