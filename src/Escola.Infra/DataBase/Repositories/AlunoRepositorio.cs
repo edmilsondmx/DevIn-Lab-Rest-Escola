@@ -17,6 +17,7 @@ namespace Escola.Infra.DataBase.Repositories
 
         public void Alterar(Aluno aluno)
         {
+            _contexto.Alunos.Update(aluno);
             _contexto.SaveChanges();
         }
 
@@ -34,7 +35,8 @@ namespace Escola.Infra.DataBase.Repositories
 
         public Aluno ObterPorId(Guid id)
         {
-            throw new NotImplementedException();
+            
+            return _contexto.Alunos.Find(id);
         }
 
         public IList<Aluno> ObterTodos()
