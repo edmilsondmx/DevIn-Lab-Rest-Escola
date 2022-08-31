@@ -23,13 +23,12 @@ namespace Escola.Api.Controllers
         {
             try
             {
-                _alunoServico.ObterTodos().ToList();
+               return Ok(_alunoServico.ObterTodos().ToList());
             }
             catch
             {
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
-            return Ok();
         }
         
         [HttpGet("id")]
@@ -39,13 +38,12 @@ namespace Escola.Api.Controllers
         {
             try
             {
-                _alunoServico.ObterPorId(id);
+                return Ok(_alunoServico.ObterPorId(id));
             }
             catch
             {
                 return StatusCode(StatusCodes.Status500InternalServerError);
-            }
-            return Ok();
+            } 
         }
 
         [HttpPost]
@@ -58,7 +56,7 @@ namespace Escola.Api.Controllers
             catch{
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
-            return Created("api/[conteoller]", aluno);
+            return Created("api/aluno", aluno);
         }
         
         [HttpPut("id")]
@@ -69,7 +67,8 @@ namespace Escola.Api.Controllers
         {
             try
             {
-                _alunoServico.Alterar(alunoDto, id);
+                alunoDto.Id = id;
+                _alunoServico.Alterar(alunoDto);
             }
             catch
             {
@@ -87,13 +86,12 @@ namespace Escola.Api.Controllers
             try
             {
                 _alunoServico.Excluir(id);
+                return NoContent();
             }
             catch
             {
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
-            
-            return NoContent();
         }
     }
 }
