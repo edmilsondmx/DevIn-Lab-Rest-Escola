@@ -6,6 +6,7 @@ using Escola.Domain.DTO;
 using Escola.Domain.Models;
 using Escola.Domain.Interfaces.Repositories;
 using Escola.Domain.Interfaces.Services;
+using Escola.Domain.Exceptions;
 
 namespace Escola.Domain.Services
 {
@@ -39,7 +40,8 @@ namespace Escola.Domain.Services
 
         public void Inserir(AlunoDTO aluno)
         {
-            //ToDo: Validar se já consta matricula.
+            if(_alunoRepositorio.ExisteMatricula(aluno.Matricula))
+                throw new DuplicadoException("Matricula já existente!");
 
             _alunoRepositorio.Inserir(new Aluno(aluno));
         }
