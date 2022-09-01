@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Escola.Domain.DTO;
 using Escola.Domain.Interfaces.Services;
+using Escola.Domain.Exceptions;
 
 namespace Escola.Api.Controllers
 {
@@ -31,7 +32,7 @@ namespace Escola.Api.Controllers
             }
         }
         
-        [HttpGet("id")]
+        [HttpGet("{id}")]
         public IActionResult BuscarPorId(
             [FromRoute] Guid id
         )
@@ -52,14 +53,19 @@ namespace Escola.Api.Controllers
         {
             try{
                 _alunoServico.Inserir(aluno);
+                return Created("api/aluno", aluno);
+            }
+            catch(DuplicadoException ex)
+            {
+                return StatusCode(StatusCodes.Status406NotAcceptable, new ErrorDTO(ex.Message));
             }
             catch{
-                return StatusCode(StatusCodes.Status500InternalServerError);
+                return StatusCode(StatusCodes.Status500InternalServerError, new ErrorDTO("Ocorreu um erro no servidor, favor contactar a TI!"));
             }
-            return Created("api/aluno", aluno);
+            
         }
         
-        [HttpPut("id")]
+        [HttpPut("{id}")]
         public IActionResult Alterar(
             [FromBody] AlunoDTO alunoDto,
             [FromRoute] Guid id
@@ -78,7 +84,7 @@ namespace Escola.Api.Controllers
             return Ok();
         }
 
-        [HttpDelete("id")]
+        [HttpDelete("{id}")]
         public IActionResult Excluir(
             [FromRoute] Guid id
         )
