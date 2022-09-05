@@ -4,25 +4,22 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Escola.Infra.DataBase.Mappings;
 
-public class MateriaMap
+public class MateriaMap : IEntityTypeConfiguration<Materia>
 {
-    public class BoletimMap : IEntityTypeConfiguration<Materia>
+    public void Configure(EntityTypeBuilder<Materia> builder)
     {
-        public void Configure(EntityTypeBuilder<Materia> builder)
-        {
-            builder.ToTable("Materia");
+        builder.ToTable("MATERIA");
 
-            builder.HasKey(m => m.Id);
+        builder.HasKey(m => m.Id);
 
-            builder.Property(m => m.Id)
-                    .HasColumnName("ID")
-                    .UseIdentityColumn()
-                    .ValueGeneratedOnAdd();
+        builder.Property(m => m.Id)
+                .HasColumnName("ID")
+                .UseIdentityColumn()
+                .ValueGeneratedOnAdd();
 
-            builder.Property(m => m.Nome)
-                    .HasColumnName("MATERIA")
-                    .HasColumnType("VARCHAR")
-                    .HasMaxLength(50);
-        }
+        builder.Property(m => m.Nome)
+                .HasColumnName("NOME")
+                .HasColumnType("VARCHAR")
+                .HasMaxLength(50);
     }
 }

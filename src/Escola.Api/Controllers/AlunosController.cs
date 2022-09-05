@@ -21,7 +21,7 @@ namespace Escola.Api.Controllers
             _alunoServico = alunoServico;
         }
         [HttpGet]
-        public IActionResult BuscarTodos(int skip = 0, int take = int.MaxValue)
+        public IActionResult BuscarTodos(int skip = 0, int take = 20)
         {
             try
             {
