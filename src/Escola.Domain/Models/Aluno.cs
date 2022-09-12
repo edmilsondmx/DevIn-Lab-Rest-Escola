@@ -26,6 +26,15 @@ namespace Escola.Domain.Models
             Sobrenome = aluno.Sobrenome;
             DataNascimento = aluno.DataNascimento;
         }
+        public Aluno(AlunoV2DTO aluno)
+        {
+            Id = aluno.Id;
+            Nome = aluno.Nome;
+            Email = aluno.Email;
+            Matricula = aluno.RA;
+            Sobrenome = aluno.Sobrenome;
+            DataNascimento = aluno.DataNascimento;
+        }
         public Aluno()
         {
             

@@ -23,11 +23,6 @@ public class BoletimRepositorio : IBoletimRepositorio
         _contexto.SaveChanges();
     }
 
-    public bool ExisteMatricula(int matricula)
-    {
-        throw new NotImplementedException();
-    }
-
     public void Inserir(Boletim boletim)
     {
         _contexto.Boletins.Add(boletim);

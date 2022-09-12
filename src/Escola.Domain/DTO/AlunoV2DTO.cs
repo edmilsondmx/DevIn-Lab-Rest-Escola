@@ -24,7 +24,7 @@ public class AlunoV2DTO
             Sobrenome = aluno.Sobrenome;
             DataNascimento = aluno.DataNascimento;
         }
-        public AlunoV2DTO(AlunoDTO aluno)
+        /* public AlunoV2DTO(AlunoDTO aluno)
         {
             Id = aluno.Id;
             Nome = aluno.Nome;
@@ -32,5 +32,5 @@ public class AlunoV2DTO
             RA = aluno.Matricula;
             Sobrenome = aluno.Sobrenome;
             DataNascimento = aluno.DataNascimento;
-        }
+        } */
 }

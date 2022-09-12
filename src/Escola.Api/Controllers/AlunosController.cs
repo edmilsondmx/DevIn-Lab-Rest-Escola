@@ -8,6 +8,9 @@ using Escola.Domain.DTO;
 using Escola.Domain.Interfaces.Services;
 using Escola.Domain.Exceptions;
 using Escola.Domain.Models;
+using Microsoft.Extensions.Caching.Memory;
+using Escola.Api.Config;
+using Microsoft.AspNetCore.JsonPatch;
 
 namespace Escola.Api.Controllers
 {
@@ -16,25 +19,40 @@ namespace Escola.Api.Controllers
     public class AlunosController : ControllerBase
     {
         private readonly IAlunoServico _alunoServico;
-        public AlunosController(IAlunoServico alunoServico)
+        private readonly IMemoryCache _cache;
+        private readonly CacheService<AlunoDTO> _alunoCache;
+        public AlunosController(
+            IAlunoServico alunoServico, 
+            IMemoryCache cache, 
+            CacheService<AlunoDTO> alunoCache)
         {
+            alunoCache.Config("aluno", new TimeSpan(0,2,50));
             _alunoServico = alunoServico;
+            _cache = cache;
+            _alunoCache = alunoCache;
         }
+
         [HttpGet]
         public IActionResult BuscarTodos(int skip = 0, int take = 20)
         {
-            try
-            {
-                var paginacao = new Paginacao(take, skip);
-                var totalRegistros = _alunoServico.ObterTotal();
+            var uri = $"{Request.Scheme}://{Request.Host}";
+            var paginacao = new Paginacao(take, skip);
+            var totalRegistros = _alunoServico.ObterTotal();
 
-                Response.Headers.Add("x-Paginacao-TotalRegistros", totalRegistros.ToString());
-                return Ok(_alunoServico.ObterTodos(paginacao).ToList());
-            }
-            catch
+            Response.Headers.Add("x-Paginacao-TotalRegistros", totalRegistros.ToString());
+
+            //Response.Cookies.Append("TesteCookie", - cria cookie
+                        //Newtonsoft.Json.JsonConvert.SerializeObject(paginacao));
+            var alunos = new BaseDTO<IList<AlunoDTO>>(){
+                Data = _alunoServico.ObterTodos(paginacao).ToList(),
+                Links = GetHateoasForAll(uri, take, skip, totalRegistros)
+            };
+            foreach (var aluno in alunos.Data)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError);
+                aluno.Links = GetHateoas(aluno, uri);
             }
+            
+            return Ok(alunos);
         }
         
         [HttpGet("{id}")]
@@ -42,14 +60,18 @@ namespace Escola.Api.Controllers
             [FromRoute] Guid id
         )
         {
-            try
-            {
-                return Ok(_alunoServico.ObterPorId(id));
-            }
-            catch
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError);
-            } 
+            //var cookie = Request.Cookies["TesteCookie"]; - pega cookie
+           // var aluno = _cache.Get<AlunoDTO>($"aluno:{id}");
+           var uri = $"{Request.Scheme}://{Request.Host}";
+            AlunoDTO aluno;
+
+            if(!_alunoCache.TryGetValue($"{id}", out aluno))
+                aluno = _alunoServico.ObterPorId(id);
+                _alunoCache.Set($"{id}", aluno);
+                aluno.Links = GetHateoas(aluno, uri);
+                
+            return Ok(aluno);
+            
         }
 
         [HttpPost]
@@ -67,16 +89,28 @@ namespace Escola.Api.Controllers
             [FromRoute] Guid id
         )
         {
-            try
-            {
-                alunoDto.Id = id;
-                _alunoServico.Alterar(alunoDto);
-            }
-            catch
-            {
-                
-                return StatusCode(StatusCodes.Status500InternalServerError);
-            }
+            alunoDto.Id = id;
+            _alunoServico.Alterar(alunoDto);
+            _alunoCache.Set($"{id}", alunoDto);
+            return Ok();
+            
+        }
+        [HttpPatch("{id}")]
+        public IActionResult Patch(
+            [FromBody] JsonPatchDocument<AlunoDTO> alunoDto,
+            [FromRoute] Guid id
+        )
+        {
+            var alunoDb = _alunoServico.ObterPorId(id);
+
+            alunoDto.ApplyTo(alunoDb, ModelState);
+
+            if(!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            alunoDb.Id = id;
+            _alunoServico.Alterar(alunoDb);
+            _alunoCache.Set($"{id}", alunoDb);
             return Ok();
         }
 
@@ -85,15 +119,85 @@ namespace Escola.Api.Controllers
             [FromRoute] Guid id
         )
         {
-            try
+            _alunoServico.Excluir(id);
+            _alunoCache.Remover($"{id}");
+            return NoContent();
+            
+        }
+        private List<HateoasDTO> GetHateoas(AlunoDTO aluno, string baseUri)
+        {
+            var hateoas =  new List<HateoasDTO>(){
+                new HateoasDTO(){
+                    Rel = "self",
+                    Type = "Get",
+                    URI = $"{baseUri}/api/alunos/{aluno.Id}"
+                },
+                new HateoasDTO(){
+                    Rel = "aluno",
+                    Type = "Put",
+                    URI = $"{baseUri}/api/alunos/{aluno.Id}"
+                },
+                new HateoasDTO(){
+                    Rel = "aluno",
+                    Type = "Delete",
+                    URI = $"{baseUri}/api/alunos/{aluno.Id}"
+                }
+            };
+            if((DateTime.Now.Year - aluno.DataNascimento.Year) >= 24)
             {
-                _alunoServico.Excluir(id);
-                return NoContent();
+                hateoas.Add(
+                    new HateoasDTO(){
+                    Rel = "MatricularAluno",
+                    Type = "Post",
+                    URI = $"{baseUri}/api/alunos/{aluno.Id}/matricular"
+                }
+                );
             }
-            catch
+            return hateoas;
+        }
+        private List<HateoasDTO> GetHateoasForAll( string baseUri, int take, int skip, int ultimo)
+        {
+            var hateoas =   new List<HateoasDTO>(){
+                new HateoasDTO(){
+                    Rel = "self",
+                    Type = "Get",
+                    URI = $"{baseUri}/api/alunos?skip={skip}&take={take}"
+                },
+                new HateoasDTO(){
+                    Rel = "aluno",
+                    Type = "Post",
+                    URI = $"{baseUri}/api/alunos/"
+                }
+            };
+            var razao = take - skip;
+            if(skip != 0)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError);
+                var newSkip = skip - razao;
+                if(newSkip < 0)
+                {
+                    newSkip = 0;
+                }
+                hateoas.Add(new HateoasDTO()
+                    {
+                        Rel = "prev",
+                        Type = "Get",
+                        URI = $"{baseUri}/api/alunos?skip={newSkip}&take={take - razao}"
+                    }
+                );
             }
+
+            if(take < ultimo)
+            {
+                hateoas.Add(new HateoasDTO()
+                    {
+                        Rel = "next",
+                        Type = "Get",
+                        URI = $"{baseUri}/api/alunos?skip={skip + razao}&take={take + razao}"
+                    }
+                );
+            }
+
+            return hateoas;
         }
     }
 }

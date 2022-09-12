@@ -8,6 +8,7 @@ using Escola.Domain.DTO;
 using Escola.Domain.Interfaces.Services;
 using Escola.Domain.Exceptions;
 using Escola.Domain.Models;
+using AutoMapper;
 
 namespace Escola.Api.Controllers
 {
@@ -15,10 +16,12 @@ namespace Escola.Api.Controllers
     [Route("api/v2/alunos")]
     public class AlunosV2Controller : ControllerBase
     {
+        private readonly IMapper  _mapper;
         private readonly IAlunoServico _alunoServico;
-        public AlunosV2Controller(IAlunoServico alunoServico)
+        public AlunosV2Controller(IAlunoServico alunoServico, IMapper  mapper)
         {
             _alunoServico = alunoServico;
+            _mapper = mapper;
         }
         [HttpGet]
         public IActionResult BuscarTodos(int skip = 0, int take = 20)
@@ -29,7 +32,7 @@ namespace Escola.Api.Controllers
                 var totalRegistros = _alunoServico.ObterTotal();
 
                 Response.Headers.Add("x-Paginacao-TotalRegistros", totalRegistros.ToString());
-                return Ok(_alunoServico.ObterTodos(paginacao).Select(a => new AlunoV2DTO(a)).ToList());
+                return Ok(_mapper.Map<IList<AlunoV2DTO>>(_alunoServico.ObterTodos(paginacao).ToList()));
             }
             catch
             {
@@ -44,7 +47,7 @@ namespace Escola.Api.Controllers
         {
             try
             {
-                return Ok(new AlunoV2DTO(_alunoServico.ObterPorId(id)));
+                return Ok(_mapper.Map<AlunoV2DTO>(_alunoServico.ObterPorId(id)));
             }
             catch
             {
@@ -56,7 +59,7 @@ namespace Escola.Api.Controllers
         public IActionResult Inserir(
             [FromBody] AlunoV2DTO aluno)
         {
-            _alunoServico.Inserir(new AlunoDTO(aluno));
+            _alunoServico.Inserir(_mapper.Map<AlunoDTO>(aluno));
 
             return StatusCode(StatusCodes.Status201Created);
         }
@@ -70,7 +73,7 @@ namespace Escola.Api.Controllers
             try
             {
                 aluno.Id = id;
-                _alunoServico.Alterar(new AlunoDTO(aluno));
+                _alunoServico.Alterar(_mapper.Map<AlunoDTO>(aluno));
             }
             catch
             {

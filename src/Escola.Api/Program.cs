@@ -4,23 +4,26 @@ using Escola.Infra.DataBase.Repositories;
 using Escola.Domain.Services;
 using Escola.Infra.DataBase;
 using Escola.Api.Config;
+using AutoMapper;
+using Escola.Domain.DTO;
+using Escola.Domain.Models;
+using Escola.Api.Config.IoC;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<EscolaDBContexto>();
 
-builder.Services.AddScoped<IAlunoRepositorio,AlunoRepositorio>();
-builder.Services.AddScoped<IAlunoServico,AlunoServico>();
-builder.Services.AddScoped<IBoletimRepositorio,BoletimRepositorio>();
-builder.Services.AddScoped<IBoletimServico,BoletimServico>();
-builder.Services.AddScoped<IMateriaRepositorio,MateriaRepositorio>();
-builder.Services.AddScoped<IMateriaServico,MateriaServico>();
-builder.Services.AddScoped<INotasMateriaRepositorio,NotasMateriaRepositorio>();
-builder.Services.AddScoped<INotasMateriaServico,NotasMateriaServico>();
+RepositoryIoC.RegisterService(builder.Services);
+ServiceIoC.RegisterService(builder.Services);
 
-
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+                .AddNewtonsoftJson();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped(typeof(CacheService<>));
+
+builder.Services.AddSingleton(AutoMapperConfig.Configure());
 
 var app = builder.Build();
 app.MapControllers();

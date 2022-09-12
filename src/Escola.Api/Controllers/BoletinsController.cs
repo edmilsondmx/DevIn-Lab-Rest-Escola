@@ -2,6 +2,7 @@ using Escola.Domain.DTO;
 using Escola.Domain.Interfaces.Services;
 using Escola.Domain.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Escola.Api.Controllers;
 
@@ -10,22 +11,14 @@ namespace Escola.Api.Controllers;
 public class BoletinsController : ControllerBase
 {
     private readonly IBoletimServico _boletimServico;
+    private readonly IMemoryCache _cache;
 
-    public BoletinsController(IBoletimServico boletimServico)
+    public BoletinsController(IBoletimServico boletimServico, IMemoryCache cache)
     {
         _boletimServico = boletimServico;
+        _cache = cache;
     }
 
-    /* [HttpGet]
-    public IActionResult ObterTodos(
-        int take = 0, int skip = 20)
-    {
-        var paginacao = new Paginacao(take, skip);
-        var totalRegistros = _boletimServico.ObterTotal();
-
-        Response.Headers.Add("x-Paginacao-TotalRegistros", totalRegistros.ToString());
-        return Ok(_boletimServico.ObterTodos(paginacao).ToList());
-    } */
     [HttpGet]
     public IActionResult ObterPorNome(
         string nome,
@@ -44,7 +37,8 @@ public class BoletinsController : ControllerBase
         return Ok(_boletimServico.ObterTodos(paginacao));
     }
 
-    [HttpGet("aluno/{idaluno}/boletins")]
+    [HttpGet]
+    [Route("~/api/alunos/{idaluno}/boletins")]
     public IActionResult ObterPoId(
         [FromRoute] Guid idaluno,
         int take = 0, 
